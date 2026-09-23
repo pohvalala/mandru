@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Мандри — відкривай Україну</title>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@600&display=swap&subset=cyrillic" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<style>
+:root{--bg:#F1F5F0;--card:#fff;--ink:#16241D;--mute:#5B6B62;--line:#D9E2DA;--brand:#1F5E45;--brand-ink:#fff;--sun:#F4B71F;--sun-ink:#3A2A00;--sh:#E3EDFB;--sh-ink:#1B4A85;--map:#DDE8DF;--grid:#C9D8CD;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1712;--card:#17231C;--ink:#E8F0EA;--mute:#9BB0A3;--line:#263A2F;--brand:#5FBF93;--brand-ink:#08150E;--sun-ink:#2b1f00;--sh:#14263F;--sh-ink:#9CC4F5;--map:#152219;--grid:#1E3226}}
+:root[data-theme="dark"]{--bg:#0F1712;--card:#17231C;--ink:#E8F0EA;--mute:#9BB0A3;--line:#263A2F;--brand:#5FBF93;--brand-ink:#08150E;--sun-ink:#2b1f00;--sh:#14263F;--sh-ink:#9CC4F5;--map:#152219;--grid:#1E3226}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.5 Onest,system-ui,sans-serif;display:flex;flex-direction:column}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:var(--brand);color:var(--brand-ink)}
+.logo{font:600 20px Unbounded,sans-serif;letter-spacing:.02em}
+.btn{border:0;border-radius:999px;padding:9px 16px;font-weight:600;background:var(--sun);color:var(--sun-ink)}
+.btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+main{flex:1;min-height:0;display:grid;grid-template-columns:45fr 55fr}
+#list{overflow-y:auto;padding:14px 16px 90px}
+#mapwrap{position:relative;min-height:0}
+#map{position:absolute;inset:0;background:var(--map);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:48px 48px}
+.tools{position:sticky;top:-14px;z-index:5;background:var(--bg);padding:4px 0 10px}
+.tools input,.tools select,.f input,.f select,.f textarea{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--card)}
+.row{display:flex;gap:8px;margin-top:8px}
+.chips{display:flex;gap:6px;overflow-x:auto;margin-top:8px;padding-bottom:2px}
+.chip{white-space:nowrap;border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;font-size:13px}
+.chip[aria-pressed=true]{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.card{display:grid;grid-template-columns:110px 1fr;gap:12px;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:10px;margin-bottom:10px;transition:border-color .15s}
+.card:hover,.card.on{border-color:var(--brand)}
+.ph{border-radius:10px;min-height:110px;display:grid;place-items:center;font-size:38px;background-size:cover;background-position:center}
+.ph[data-c=food]{background-color:#F6D58A}.ph[data-c=history]{background-color:#A9C4EC}.ph[data-c=nature]{background-color:#A8D5B5}.ph[data-c=estate]{background-color:#D5B8E0}
+.card h3{margin:0;font-size:16px}.cat{font-size:12px;color:var(--mute)}
+.card p{margin:4px 0 6px;color:var(--mute);font-size:13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.badge{display:inline-block;border-radius:8px;padding:2px 8px;font-size:12px;font-weight:600;margin:0 6px 4px 0}
+.bonus{background:var(--sun);color:var(--sun-ink)}.shelter{background:var(--sh);color:var(--sh-ink)}.pend{background:var(--line);color:var(--mute)}
+.link{background:none;border:0;padding:0;color:var(--brand);font-weight:600;text-decoration:underline}
+.empty{text-align:center;color:var(--mute);padding:40px 10px}
+.pin{width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--brand);border:3px solid #fff;display:grid;place-items:center;box-shadow:0 2px 6px #0006;transition:transform .15s}
+.pin span{transform:rotate(45deg);font-size:15px}
+.pin.on{background:var(--sun);transform:rotate(-45deg) scale(1.3)}
+.tabs{display:none}
+dialog{border:0;border-radius:16px;padding:0;width:min(560px,94vw);max-height:92dvh;background:var(--card);color:var(--ink)}
+dialog::backdrop{background:#000a}
+.dh{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1.5px solid var(--line);font:600 15px Unbounded,sans-serif}
+.db{padding:16px 18px;overflow-y:auto;max-height:calc(92dvh - 130px)}
+.f label{display:block;font-weight:600;font-size:13px;margin:12px 0 4px}
+.f .err{color:#C0392B;font-size:12px;min-height:0}
+.f .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#mini{height:200px;border-radius:10px;border:1.5px solid var(--line);background:var(--map)}
+#drop{border:2px dashed var(--line);border-radius:12px;padding:16px;text-align:center;color:var(--mute)}
+#drop.over{border-color:var(--brand)}#drop img{max-width:100%;max-height:160px;border-radius:8px}
+.df{padding:12px 18px;border-top:1.5px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+.leaflet-pane,.leaflet-tile,.leaflet-marker-icon,.leaflet-popup,.leaflet-layer{position:absolute;left:0;top:0}
+.leaflet-container{overflow:hidden;position:relative;outline:0}
+.leaflet-map-pane{z-index:1}.leaflet-tile-pane{z-index:2}.leaflet-overlay-pane{z-index:4}.leaflet-marker-pane{z-index:6}.leaflet-popup-pane{z-index:7}.leaflet-control-container .leaflet-top,.leaflet-bottom{position:absolute;z-index:1000}
+.leaflet-top{top:0}.leaflet-left{left:0}.leaflet-right{right:0}.leaflet-bottom{bottom:0}
+.leaflet-control{position:relative;margin:10px;float:left;clear:both}
+.leaflet-control-zoom a{display:block;width:32px;height:32px;line-height:32px;text-align:center;background:var(--card);color:var(--ink);text-decoration:none;font-size:20px;border:1.5px solid var(--line)}
+.leaflet-marker-icon{cursor:pointer}
+.leaflet-container img.leaflet-tile{max-width:none;max-height:none}
+.leaflet-zoom-animated{transform-origin:0 0}
+.leaflet-zoom-anim .leaflet-zoom-animated{transition:transform .25s cubic-bezier(0,0,.25,1)}
+.leaflet-control-attribution{background:var(--card);color:var(--mute);font-size:11px;padding:0 6px;margin:0}
+.leaflet-control-attribution a{color:inherit;text-decoration:none}
+.leaflet-popup{margin-bottom:34px}.leaflet-popup-content-wrapper{background:var(--card);color:var(--ink);border-radius:12px;box-shadow:0 4px 16px #0004;overflow:hidden}
+.leaflet-popup-content{margin:0;width:210px!important}.leaflet-popup-tip-container{position:absolute;left:50%;margin-left:-10px;width:20px;height:10px;overflow:hidden}
+.leaflet-popup-tip{width:14px;height:14px;margin:-7px auto 0;transform:rotate(45deg);background:var(--card)}
+.leaflet-popup-close-button{position:absolute;right:6px;top:2px;z-index:2;color:var(--ink);text-decoration:none;font-size:20px}
+.pp{padding:0 0 10px}.pp .ph{border-radius:0;min-height:70px;height:70px}.pp>div:not(.ph){padding:8px 12px 0}
+.note{position:absolute;left:10px;bottom:10px;z-index:900;background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:3px 8px;font-size:11px;color:var(--mute)}
+@media (max-width:767px){
+main{grid-template-columns:1fr}
+body[data-tab=list] #mapwrap,body[data-tab=map] #list{display:none}
+.tabs{display:flex;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:2000;background:var(--card);border:1.5px solid var(--line);border-radius:999px;padding:4px;box-shadow:0 4px 16px #0004}
+.tabs button{border:0;background:none;padding:9px 16px;border-radius:999px;font-weight:600}
+.tabs button[aria-selected=true]{background:var(--brand);color:var(--brand-ink)}
+.card{grid-template-columns:90px 1fr}.hide-m{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body data-tab="list">
+<header>
+  <span class="logo">Мандри</span>
+  <button class="btn" id="addBtn">Додати своє місце</button>
+</header>
+<main>
+  <section id="list" aria-label="Список місць">
+    <div class="tools">
+      <input id="q" type="search" placeholder="Пошук: назва, село, область…" aria-label="Пошук">
+      <div class="chips" id="chips"></div>
+      <div class="row"><select id="sort" aria-label="Сортування"><option value="title">За назвою</option><option value="shelter">Найближче укриття</option></select></div>
+    </div>
+    <div id="cards"></div>
+  </section>
+  <section id="mapwrap" aria-label="Карта"><div id="map"></div></section>
+</main>
+<nav class="tabs" role="tablist" aria-label="Розділ">
+  <button role="tab" aria-selected="true" data-t="list">📋 Список місць</button>
+  <button role="tab" aria-selected="false" data-t="map">🗺️ Карта</button>
+</nav>
+
+<dialog id="detail"><div class="dh"><span id="dTitle"></span><button class="btn ghost" onclick="detail.close()">Закрити</button></div><div class="db" id="dBody"></div></dialog>
+
+<dialog id="exp"><div class="dh"><span>Збережіть місце</span><button class="btn ghost" onclick="exp.close()">Закрити</button></div><div class="db"><p>Місце показано лише на цій сторінці. Щоб воно залишилось, вставте цей рядок у файл <b>places.js</b> перед <b>]</b>. Фото завантажте в папку <b>photos</b> і додайте до рядка <b>img:"photos/назва.jpg"</b>.</p><textarea id="expTxt" rows="5" readonly style="width:100%;padding:10px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg)"></textarea><p><button class="btn" id="copyBtn">Копіювати рядок</button></p></div></dialog>
+
+<dialog id="addDlg">
+  <div class="dh"><span>Нове місце</span><button class="btn ghost" id="closeAdd">Закрити</button></div>
+  <div class="db f" id="form">
+    <label for="fTitle">Назва локації</label><input id="fTitle"><div class="err" data-e="fTitle"></div>
+    <label for="fCat">Категорія</label>
+    <select id="fCat"><option value="">Оберіть категорію</option><option value="food">Крафтове виробництво / Їжа</option><option value="history">Музей / Культура</option><option value="estate">Садиба / Проживання</option><option value="nature">Природна локація</option></select><div class="err" data-e="fCat"></div>
+    <label for="fDesc">Опис: історія, що подивитися, графік роботи</label><textarea id="fDesc" rows="4"></textarea><div class="err" data-e="fDesc"></div>
+    <label>Місце на карті: клікніть або перетягніть маркер</label><div id="mini"></div>
+    <div class="two"><div><label for="fLat">Широта</label><input id="fLat" readonly></div><div><label for="fLng">Довгота</label><input id="fLng" readonly></div></div><div class="err" data-e="fLat"></div>
+    <label for="fAddr">Адреса або орієнтир (село/місто, область)</label><input id="fAddr"><div class="err" data-e="fAddr"></div>
+    <div class="two"><div><label for="fSm">Відстань до укриття, м</label><input id="fSm" type="number" min="0"></div><div><label for="fSa">Адреса укриття</label><input id="fSa"></div></div><div class="err" data-e="fSm"></div>
+    <label for="fBonus">Винагорода для туристів</label><input id="fBonus" placeholder="Знижка 15% на крафтовий сир"><div class="err" data-e="fBonus"></div>
+    <label>Фото</label>
+    <div id="drop"><div id="pv">Перетягніть фото сюди або <button type="button" class="link" id="pick">оберіть файл</button></div><input type="file" id="file" accept="image/*" hidden></div><div class="err" data-e="file"></div>
+  </div>
+  <div class="df"><button class="btn ghost" id="cancelAdd">Скасувати</button><button class="btn" id="save">Опублікувати</button></div>
+</dialog>
+
+<script src="places.js"></script>
+<script>
+const CATS={food:{n:'Гастрономія / Крафт',e:'🧀'},history:{n:'Історія / Музеї',e:'🏛️'},nature:{n:'Природа',e:'⛰️'},estate:{n:'Садиби',e:'🏡'}};
+const places=(window.PLACES||[]).map((p,i)=>({id:i+1,pending:false,...p}));
+let cat='all',activeId=null,markers={};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ph=(p,cls='')=>`<div class="ph ${cls}" data-c="${p.cat}" ${p.img?`style="background-image:url('${p.img}')"`:''}>${p.img?'':CATS[p.cat].e}</div>`;
+
+const map=L.map('map',{minZoom:5}).setView([49,25.5],7);
+const dark=matchMedia('(prefers-color-scheme: dark)').matches;
+const TILES = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+L.tileLayer(TILES, {
+  maxZoom: 19,
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);
+const layer=L.layerGroup().addTo(map);
+function view(){
+  const q=$('q').value.trim().toLowerCase();
+  let r=places.filter(p=>(cat==='all'||p.cat===cat)&&(p.title+p.addr+p.desc).toLowerCase().includes(q));
+  r.sort($('sort').value==='shelter'?(a,b)=>a.sm-b.sm:(a,b)=>a.title.localeCompare(b.title,'uk'));
+  return r;
+}
+function render(){
+  const r=view();
+  $('cards').innerHTML=r.length?r.map(p=>`<article class="card ${p.id===activeId?'on':''}" data-id="${p.id}">${ph(p)}<div><h3>${esc(p.title)}</h3><div class="cat">${CATS[p.cat].n} · ${esc(p.addr)}</div><p>${esc(p.desc)}</p><span class="badge bonus">🎁 ${esc(p.bonus)}</span><span class="badge shelter">🛡️ Укриття: ${p.sm} м</span>${p.pending?'<span class="badge pend">На модерації</span>':''}<div><button class="link" data-show="${p.id}">Показати на карті</button> <button class="link" data-more="${p.id}">Детальніше</button></div></div></article>`).join(''):'<div class="empty">Нічого не знайдено. Змініть фільтр або пошуковий запит.</div>';
+  layer.clearLayers();markers={};
+  r.forEach(p=>{
+    const m=L.marker([p.lat,p.lng],{icon:L.divIcon({className:'',html:`<div class="pin"><span>${CATS[p.cat].e}</span></div>`,iconSize:[34,34],iconAnchor:[17,34]})}).addTo(layer);
+    m.bindPopup(`<div class="pp">${ph(p)}<div><strong>${esc(p.title)}</strong><br><span class="badge bonus">🎁 ${esc(p.bonus)}</span><br><button class="btn" style="margin-top:6px;padding:5px 12px" onclick="openDetail(${p.id})">Детальніше</button></div></div>`,{closeButton:true});
+    m.on('click',()=>mark(p.id));
+    markers[p.id]=m;
+  });
+  if(activeId&&markers[activeId])pin(activeId,true);
+}
+function pin(id,on){const m=markers[id];if(m&&m._icon)m._icon.firstChild.classList.toggle('on',on)}
+function mark(id){document.querySelectorAll('.card').forEach(c=>c.classList.toggle('on',+c.dataset.id===id));
+  if(activeId&&activeId!==id)pin(activeId,false);activeId=id;pin(id,true);
+  const c=document.querySelector(`.card[data-id="${id}"]`);if(c&&!c.closest('#list').matches('[hidden]'))c.scrollIntoView({block:'nearest',behavior:'smooth'})}
+function showOnMap(id){setTab('map');const p=places.find(x=>x.id===id);setTimeout(()=>{map.invalidateSize();map.setView([p.lat,p.lng],11);markers[id]?.openPopup();mark(id)},60)}
+window.openDetail=id=>{const p=places.find(x=>x.id===id);map.closePopup();
+  $('dTitle').textContent=p.title;
+  $('dBody').innerHTML=`${ph(p)}<p><span class="cat">${CATS[p.cat].n} · ${esc(p.addr)}</span></p><p>${esc(p.desc)}</p><p><span class="badge bonus">🎁 ${esc(p.bonus)}</span></p><p><span class="badge shelter">🛡️ Найближче укриття: ${p.sm} м</span><br>${esc(p.sa)}</p>`;
+  $('detail').showModal()};
+function setTab(t){document.body.dataset.tab=t;document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));if(t==='map')setTimeout(()=>map.invalidateSize(),50)}
+
+$('chips').innerHTML=[['all','Всі'],...Object.entries(CATS).map(([k,v])=>[k,v.n])].map(([k,n])=>`<button class="chip" data-k="${k}" aria-pressed="${k==='all'}">${n}</button>`).join('');
+$('chips').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;cat=b.dataset.k;document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c===b));render()};
+$('q').oninput=$('sort').onchange=render;
+document.querySelector('.tabs').onclick=e=>{const b=e.target.closest('button');if(b)setTab(b.dataset.t)};
+$('cards').onclick=e=>{const s=e.target.closest('[data-show]'),m=e.target.closest('[data-more]');if(s)showOnMap(+s.dataset.show);if(m)openDetail(+m.dataset.more)};
+$('cards').onmouseover=e=>{const c=e.target.closest('.card');if(c&&+c.dataset.id!==activeId){if(activeId)pin(activeId,false);activeId=+c.dataset.id;pin(activeId,true);document.querySelectorAll('.card').forEach(x=>x.classList.toggle('on',x===c))}};
+
+/* --- Форма додавання --- */
+let mini=null,mm=null,photo=null;
+function setLL(ll){$('fLat').value=ll.lat.toFixed(6);$('fLng').value=ll.lng.toFixed(6)}
+function openAdd(){$('addDlg').showModal();
+  setTimeout(()=>{mini=L.map('mini').setView([49,25.5],6);
+    mini.on('click',e=>{if(!mm){mm=L.marker(e.latlng,{draggable:true}).addTo(mini);mm.on('drag',()=>setLL(mm.getLatLng()))}else mm.setLatLng(e.latlng);setLL(e.latlng)})},50)}
+function closeAdd(){$('addDlg').close();if(mini){mini.remove();mini=mm=null}photo=null;document.querySelectorAll('#form input,#form textarea,#form select').forEach(i=>i.value='');$('pv').innerHTML='Перетягніть фото сюди або <button type="button" class="link" id="pick">оберіть файл</button>';document.querySelectorAll('.err').forEach(e=>e.textContent='')}
+$('addBtn').onclick=openAdd;$('closeAdd').onclick=$('cancelAdd').onclick=closeAdd;
+function takeFile(f){const e=document.querySelector('[data-e=file]');e.textContent='';
+  if(!f)return;if(!f.type.startsWith('image/'))return e.textContent='Оберіть файл зображення (JPG, PNG, WebP).';
+  if(f.size>5e6)return e.textContent='Фото завелике: максимум 5 МБ.';
+  const r=new FileReader();r.onload=()=>{photo=r.result;$('pv').innerHTML=`<img src="${photo}" alt="Попередній перегляд"><br><button type="button" class="link" id="pick">Замінити</button>`};r.readAsDataURL(f)}
+$('drop').onclick=e=>{if(e.target.id==='pick')$('file').click()};
+$('file').onchange=e=>takeFile(e.target.files[0]);
+['dragover','dragenter'].forEach(t=>$('drop').addEventListener(t,e=>{e.preventDefault();$('drop').classList.add('over')}));
+['dragleave','drop'].forEach(t=>$('drop').addEventListener(t,e=>{e.preventDefault();$('drop').classList.remove('over')}));
+$('drop').addEventListener('drop',e=>takeFile(e.dataTransfer.files[0]));
+$('save').onclick=()=>{
+  const v=id=>$(id).value.trim(),errs={};
+  if(v('fTitle').length<3)errs.fTitle='Вкажіть назву (мінімум 3 символи).';
+  if(!v('fCat'))errs.fCat='Оберіть категорію.';
+  if(v('fDesc').length<20)errs.fDesc='Опишіть місце докладніше (мінімум 20 символів).';
+  if(!v('fLat'))errs.fLat='Поставте маркер на мінікарті.';
+  if(!v('fAddr'))errs.fAddr='Вкажіть адресу або орієнтир.';
+  if(v('fSm')===''||+v('fSm')<0||!v('fSa'))errs.fSm='Вкажіть відстань до укриття та його адресу.';
+  if(!v('fBonus'))errs.fBonus='Опишіть винагороду для туристів.';
+  document.querySelectorAll('.err').forEach(e=>e.textContent=errs[e.dataset.e]||'');
+  if(Object.keys(errs).length)return;
+  const o={title:v('fTitle'),cat:v('fCat'),desc:v('fDesc'),addr:v('fAddr'),lat:+v('fLat'),lng:+v('fLng'),sm:+v('fSm'),sa:v('fSa'),bonus:v('fBonus')};
+  places.push({id:Date.now(),...o,img:photo,pending:true});
+  const p=places[places.length-1];closeAdd();cat='all';document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.k==='all'));render();showOnMap(p.id);
+  $('expTxt').value=JSON.stringify(o).replace(/"(\w+)":/g,'$1:')+',';$('exp').showModal()};
+$('copyBtn').onclick=()=>{$('expTxt').select();document.execCommand('copy');$('copyBtn').textContent='Скопійовано'};
+render();
+</script>
+</body>
+</html>
